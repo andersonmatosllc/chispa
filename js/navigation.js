@@ -119,14 +119,14 @@
   let touchStartY = 0;
 
   document.addEventListener('touchstart',e=>{
-
+if (e.target.tagName === 'TEXTAREA') return;
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
 
   });
 
   document.addEventListener('touchend',e=>{
-
+if (e.target.tagName === 'TEXTAREA') return;
     const touchEndX = e.changedTouches[0].screenX;
     const touchEndY = e.changedTouches[0].screenY;
 
