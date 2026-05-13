@@ -20,11 +20,9 @@
 
   function resetScreens(){
 
-    screens.center.className = 'screen center';
-    screens.north.className = 'screen north';
-    screens.south.className = 'screen south';
-    screens.east.className = 'screen east';
-    screens.west.className = 'screen west';
+Object.values(screens).forEach(screen => {
+  screen.classList.remove('active');
+});
 
   }
 
