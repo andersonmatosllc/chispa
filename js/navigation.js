@@ -5,57 +5,43 @@
 // --------------------------
 
 const screens = {
-
   center: document.getElementById('center'),
   north: document.getElementById('north'),
   south: document.getElementById('south'),
   east: document.getElementById('east'),
   west: document.getElementById('west')
-
 };
 
 let current = 'center';
 
 // --------------------------
-// RESET (FIXED FOR iPHONE)
+// RESET SCREENS (iPHONE SAFE)
 // --------------------------
 
-function resetScreens(){
-
-  // DO NOT use className (breaks iOS focus/DOM stability)
+function resetScreens() {
   Object.values(screens).forEach(screen => {
     screen.classList.remove('active');
   });
-
 }
 
 // --------------------------
-// NAVIGATION
+// NAVIGATE
 // --------------------------
 
-function navigate(target){
-
+function navigate(target) {
   resetScreens();
-
   screens[target].classList.add('active');
-
   current = target;
-
 }
 
 // --------------------------
 // KEYBOARD NAVIGATION
 // --------------------------
 
-document.addEventListener('keydown', (e)=>{
+document.addEventListener('keydown', (e) => {
+  if (document.activeElement.tagName === 'TEXTAREA') return;
 
-  // Prevent navigation while typing
-  if(document.activeElement.tagName === 'TEXTAREA'){
-    return;
-  }
-
-  switch(e.key){
-
+  switch (e.key) {
     case 'ArrowUp':
       navigate('north');
       break;
@@ -73,90 +59,46 @@ document.addEventListener('keydown', (e)=>{
       break;
 
     case 'Escape':
+    case 'Backspace':
       navigate('center');
       break;
-
   }
-
 });
 
 // --------------------------
 // TOUCH NAVIGATION (iPHONE SAFE)
 // --------------------------
 
-let touchStartX = 0;
-let touchStartY = 0;
-let isTouchingInput = false;
+let startX = 0;
+let startY = 0;
 
-document.addEventListener('touchstart', e => {
+document.addEventListener('touchstart', (e) => {
+  if (e.target.tagName === 'TEXTAREA') return;
 
-  // If user is interacting with textarea, ignore swipe system
-  if(e.target.tagName === 'TEXTAREA'){
-    isTouchingInput = true;
-    return;
-  }
-
-  isTouchingInput = false;
-
-  touchStartX = e.changedTouches[0].screenX;
-  touchStartY = e.changedTouches[0].screenY;
-
+  startX = e.changedTouches[0].screenX;
+  startY = e.changedTouches[0].screenY;
 });
 
-document.addEventListener('touchend', e => {
+document.addEventListener('touchend', (e) => {
+  if (e.target.tagName === 'TEXTAREA') return;
 
-  // Prevent swipe interfering with typing
-  if(isTouchingInput) return;
+  const endX = e.changedTouches[0].screenX;
+  const endY = e.changedTouches[0].screenY;
 
-  if(document.activeElement.tagName === 'TEXTAREA'){
-    return;
+  const dx = endX - startX;
+  const dy = endY - startY;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 70) navigate('east');
+    else if (dx < -70) navigate('west');
+  } else {
+    if (dy > 70) navigate('south');
+    else if (dy < -70) navigate('north');
   }
-
-  const touchEndX = e.changedTouches[0].screenX;
-  const touchEndY = e.changedTouches[0].screenY;
-
-  const dx = touchEndX - touchStartX;
-  const dy = touchEndY - touchStartY;
-
-  // Horizontal swipe
-  if(Math.abs(dx) > Math.abs(dy)){
-
-    if(dx > 70){
-      navigate('east');
-    }
-    else if(dx < -70){
-      navigate('west');
-    }
-
-  }
-
-  // Vertical swipe
-  else{
-
-    if(dy > 70){
-      navigate('south');
-    }
-    else if(dy < -70){
-      navigate('north');
-    }
-
-  }
-
 });
 
 // --------------------------
-// DOUBLE TAP CENTER
+// INIT
 // --------------------------
 
-document.addEventListener('dblclick', ()=>{
-
-  navigate('center');
-
-});
-
-// --------------------------
-// IMPORTANT: SAFE INITIAL STATE
-// --------------------------
-
-// ensures iOS renders active state correctly
 navigate('center');
