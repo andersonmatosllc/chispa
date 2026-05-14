@@ -1,72 +1,51 @@
 'use strict';
 
-document.addEventListener('DOMContentLoaded', () => {
+window.onload = function(){
 
-  const noteIds = [
-    'center',
-    'north',
-    'south',
-    'east',
-    'west'
-  ];
+    console.log("Storage loaded");
 
-  noteIds.forEach(id => {
+    const areas = document.querySelectorAll("textarea");
 
-    const textarea =
-      document.getElementById(`note-${id}`);
+    areas.forEach(area=>{
 
-    const saveStatus =
-      document.getElementById(`save-${id}`);
+        const key = area.id;
 
-    if (!textarea) {
-      console.log(`Missing textarea: note-${id}`);
-      return;
-    }
+        // LOAD
 
-    // Load saved content
-    const savedText =
-      localStorage.getItem(`chispa-${id}`);
+        const saved =
+        localStorage.getItem(key);
 
-    if(savedText){
+        if(saved){
 
-      textarea.value = savedText;
+            area.value = saved;
 
-    }
-
-    textarea.addEventListener('input', () => {
-
-      try{
-
-        localStorage.setItem(
-          `chispa-${id}`,
-          textarea.value
-        );
-
-        if(saveStatus){
-
-          saveStatus.textContent='saved';
-
-          setTimeout(()=>{
-
-            saveStatus.textContent='';
-
-          },800);
+            console.log(
+              "Loaded:",
+              key
+            );
 
         }
 
-      }
+        // SAVE
 
-      catch(error){
+        area.addEventListener(
+          "keyup",
+          ()=>{
 
-        console.error(
-          'Storage failed:',
-          error
+            localStorage.setItem(
+              key,
+              area.value
+            );
+
+            console.log(
+              "Saved:",
+              key
+            );
+
+          }
+
         );
-
-      }
 
     });
 
-  });
-
-});
+};
