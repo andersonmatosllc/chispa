@@ -1,10 +1,6 @@
 'use strict';
 
-(() => {
-
-  // ------------------------
-  // LOCAL STORAGE (SAVE NOTES)
-  // ------------------------
+document.addEventListener('DOMContentLoaded', () => {
 
   const noteIds = [
     'center',
@@ -16,32 +12,61 @@
 
   noteIds.forEach(id => {
 
-    const textarea = document.getElementById(`note-${id}`);
-    const saveStatus = document.getElementById(`save-${id}`);
+    const textarea =
+      document.getElementById(`note-${id}`);
 
-    // If elements don't exist, stop (prevents crashes)
-    if (!textarea || !saveStatus) return;
+    const saveStatus =
+      document.getElementById(`save-${id}`);
 
-    // Load saved text when page opens
-    const saved = localStorage.getItem(`chispa-${id}`);
-    if (saved !== null) {
-      textarea.value = saved;
+    if (!textarea) {
+      console.log(`Missing textarea: note-${id}`);
+      return;
     }
 
-    // Save while typing
+    // Load saved content
+    const savedText =
+      localStorage.getItem(`chispa-${id}`);
+
+    if(savedText){
+
+      textarea.value = savedText;
+
+    }
+
     textarea.addEventListener('input', () => {
 
-      saveStatus.innerText = 'saving...';
+      try{
 
-      localStorage.setItem(`chispa-${id}`, textarea.value);
+        localStorage.setItem(
+          `chispa-${id}`,
+          textarea.value
+        );
 
-      // small delay just for UI effect
-      setTimeout(() => {
-        saveStatus.innerText = 'saved';
-      }, 300);
+        if(saveStatus){
+
+          saveStatus.textContent='saved';
+
+          setTimeout(()=>{
+
+            saveStatus.textContent='';
+
+          },800);
+
+        }
+
+      }
+
+      catch(error){
+
+        console.error(
+          'Storage failed:',
+          error
+        );
+
+      }
 
     });
 
   });
 
-})();
+});
