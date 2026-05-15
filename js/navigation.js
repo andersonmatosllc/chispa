@@ -1,132 +1,139 @@
-'use strict';
+// ===============================
+// CHISPA — Spatial Navigation
+// Swipe + Center Return Button
+// ===============================
 
-/**
- * -------------------------------------------------------------------
- * SPATIAL NAVIGATION SYSTEM (CHISPA)
- * -------------------------------------------------------------------
- */
+const screens = ["center", "north", "south", "east", "west"];
 
-const screens = {
-  center: document.getElementById('center'),
-  north: document.getElementById('north'),
-  south: document.getElementById('south'),
-  east: document.getElementById('east'),
-  west: document.getElementById('west')
-};
+let currentScreen = "center";
 
-let current = 'center';
+// -------------------------------
+// Screen switching
+// -------------------------------
+function showScreen(id) {
+  screens.forEach((screen) => {
+    const el = document.getElementById(screen);
+    if (!el) return;
 
-// -------------------------------------------------------------------
-// GENERATE MINIMALISTIC RECENTRING RECTANGLES IN DOM
-// -------------------------------------------------------------------
-const styleInject = document.createElement('style');
-styleInject.textContent = `
-  .panel {
-    position: relative;
-  }
-  .mindful-home-bar {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 2px;
-    cursor: pointer;
-    transition: background 0.3s ease, width 0.3s ease;
-    z-index: 100;
-  }
-  .mindful-home-bar:hover {
-    background: var(--accent, #8df0c8);
-    width: 50px;
-  }
-`;
-document.head.appendChild(styleInject);
-
-Object.entries(screens).forEach(([key, screenElement]) => {
-  if (!screenElement) return;
-  const panel = screenElement.querySelector('.panel');
-  
-  if (panel && key !== 'center') {
-    const homeBar = document.createElement('div');
-    homeBar.className = 'mindful-home-bar';
-    homeBar.setAttribute('aria-label', 'Return to Center');
-    
-    homeBar.addEventListener('click', (e) => {
-      e.stopPropagation();
-      navigate('center');
-    });
-    
-    panel.appendChild(homeBar);
-  }
-});
-
-// -------------------------------------------------------------------
-// APPLICATION VIEW PIPELINES
-// -------------------------------------------------------------------
-function resetScreens() {
-  Object.values(screens).forEach(screen => {
-    if (screen) screen.classList.remove('active');
+    el.classList.remove("active");
   });
+
+  const target = document.getElementById(id);
+  if (target) target.classList.add("active");
+
+  currentScreen = id;
 }
 
-function navigate(target) {
-  if (!screens[target]) return;
-  resetScreens();
-  screens[target].classList.add('active');
-  current = target;
+// -------------------------------
+// Swipe detection
+// -------------------------------
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+const threshold = 60;
+
+// Prevent swipe interference with typing
+function isTypingTarget(e) {
+  return (
+    e.target.tagName === "TEXTAREA" ||
+    e.target.tagName === "INPUT" ||
+    e.target.isContentEditable
+  );
 }
 
-function isUserTyping() {
-  const active = document.activeElement;
-  return active && (active.tagName === 'TEXTAREA' || active.classList.contains('note-area'));
-}
+document.addEventListener("touchstart", (e) => {
+  if (isTypingTarget(e)) return;
 
-// -------------------------------------------------------------------
-// KEYBOARD & SWIPE INPUT ACTIONS (TYPING INPUT PROTECTED)
-// -------------------------------------------------------------------
-document.addEventListener('keydown', (e) => {
-  if (isUserTyping()) return;
-
-  switch (e.key) {
-    case 'ArrowUp':    navigate('north'); break;
-    case 'ArrowDown':  navigate('south'); break;
-    case 'ArrowLeft':  navigate('west');  break;
-    case 'ArrowRight': navigate('east');  break;
-    case 'Escape':
-    case 'Backspace':  navigate('center'); break;
-  }
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
 });
 
-let startX = 0;
-let startY = 0;
+document.addEventListener("touchend", (e) => {
+  if (isTypingTarget(e)) return;
 
-document.addEventListener('touchstart', (e) => {
-  if (isUserTyping() || e.target.tagName === 'TEXTAREA') return;
+  touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
 
-  startX = e.changedTouches[0].screenX;
-  startY = e.changedTouches[0].screenY;
-}, { passive: true });
+  handleSwipe();
+});
 
-document.addEventListener('touchend', (e) => {
-  if (isUserTyping() || e.target.tagName === 'TEXTAREA') return;
+function handleSwipe() {
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
 
-  const endX = e.changedTouches[0].screenX;
-  const endY = e.changedTouches[0].screenY;
-
-  const dx = endX - startX;
-  const dy = endY - startY;
+  if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
 
   if (Math.abs(dx) > Math.abs(dy)) {
-    if (Math.abs(dx) > 70) {
-      dx > 0 ? navigate('west') : navigate('east');
-    }
+    // Horizontal swipe
+    if (dx > 0) navigate("east");
+    else navigate("west");
   } else {
-    if (Math.abs(dy) > 70) {
-      dy > 0 ? navigate('north') : navigate('south');
-    }
+    // Vertical swipe
+    if (dy > 0) navigate("south");
+    else navigate("north");
   }
-}, { passive: true });
+}
 
-navigate('center');
+// -------------------------------
+// Navigation logic (spatial map)
+// -------------------------------
+function navigate(direction) {
+  const map = {
+    center: { north: "north", south: "south", east: "east", west: "west" },
+    north: { south: "center" },
+    south: { north: "center" },
+    east: { west: "center" },
+    west: { east: "center" }
+  };
+
+  const next = map[currentScreen]?.[direction];
+
+  if (next) {
+    showScreen(next);
+  }
+}
+
+// -------------------------------
+// Center button (bottom rectangle)
+// -------------------------------
+function createCenterButton() {
+  const btn = document.createElement("div");
+
+  btn.style.position = "fixed";
+  btn.style.bottom = "18px";
+  btn.style.left = "50%";
+  btn.style.transform = "translateX(-50%)";
+  btn.style.width = "54px";
+  btn.style.height = "10px";
+  btn.style.borderRadius = "6px";
+  btn.style.background = "rgba(255,255,255,0.14)";
+  btn.style.backdropFilter = "blur(10px)";
+  btn.style.cursor = "pointer";
+  btn.style.zIndex = "9999";
+
+  btn.style.transition = "all 0.2s ease";
+
+  btn.addEventListener("mouseenter", () => {
+    btn.style.background = "rgba(141,240,200,0.35)";
+  });
+
+  btn.addEventListener("mouseleave", () => {
+    btn.style.background = "rgba(255,255,255,0.14)";
+  });
+
+  btn.addEventListener("click", () => {
+    showScreen("center");
+  });
+
+  document.body.appendChild(btn);
+}
+
+// -------------------------------
+// Init
+// -------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  showScreen("center");
+  createCenterButton();
+});
