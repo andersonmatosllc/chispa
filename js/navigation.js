@@ -42,58 +42,44 @@ document.addEventListener('keydown', (e) => {
   if (document.activeElement.classList.contains('notepad')) return;
 
   switch (e.key) {
-    case 'ArrowUp':
-      navigate('north');
-      break;
-
-    case 'ArrowDown':
-      navigate('south');
-      break;
-
-    case 'ArrowLeft':
-      navigate('west');
-      break;
-
-    case 'ArrowRight':
-      navigate('east');
-      break;
-
+    case 'ArrowUp':    navigate('north'); break;
+    case 'ArrowDown':  navigate('south'); break;
+    case 'ArrowLeft':  navigate('west');  break;
+    case 'ArrowRight': navigate('east');  break;
     case 'Escape':
-    case 'Backspace':
-      navigate('center');
-      break;
+    case 'Backspace':  navigate('center'); break;
   }
 });
 
 // --------------------------
-// TOUCH NAVIGATION (iPHONE SAFE)
+// TOUCH NAVIGATION WITH MINDFUL PAUSE
 // --------------------------
 
 let startX = 0;
 let startY = 0;
-let lastTap = 0; // Tracks the timestamp of the last tap for double-tap detection
+let holdTimer = null; // Holds the mindfulness pause anchor
 
 document.addEventListener('touchstart', (e) => {
   if (e.target.classList.contains('notepad')) return;
 
-  // --- DOUBLE TAP TO CENTER COMMAND ---
-  const currentTime = new Date().getTime();
-  const tapLength = currentTime - lastTap;
-  
-  // If two taps happen within 300 milliseconds, it's a double tap
-  if (tapLength < 300 && tapLength > 0) {
-    navigate('center');
-    e.preventDefault(); // Prevents zooming behavior on mobile devices
-    return;
-  }
-  lastTap = currentTime;
-  // ------------------------------------
-
   startX = e.changedTouches[0].screenX;
   startY = e.changedTouches[0].screenY;
+
+  // Start the 500ms mindful hold anchor
+  holdTimer = setTimeout(() => {
+    navigate('center');
+  }, 500); 
+});
+
+document.addEventListener('touchmove', () => {
+  // If your finger moves to swipe, it's an action, not a pause. Cancel the hold.
+  clearTimeout(holdTimer);
 });
 
 document.addEventListener('touchend', (e) => {
+  // If you lift your finger before the 500ms mark, cancel the hold.
+  clearTimeout(holdTimer);
+
   if (e.target.classList.contains('notepad')) return;
 
   const endX = e.changedTouches[0].screenX;
