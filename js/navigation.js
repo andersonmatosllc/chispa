@@ -1,104 +1,347 @@
 'use strict';
 
 // --------------------------
-// SCREENS
+// SCREEN REFERENCES
 // --------------------------
 
 const screens = {
-  center: document.getElementById('center'),
-  north: document.getElementById('north'),
-  south: document.getElementById('south'),
-  east: document.getElementById('east'),
-  west: document.getElementById('west')
+
+  center:
+  document.getElementById('center'),
+
+  north:
+  document.getElementById('north'),
+
+  south:
+  document.getElementById('south'),
+
+  east:
+  document.getElementById('east'),
+
+  west:
+  document.getElementById('west')
+
 };
 
 let current = 'center';
 
+
 // --------------------------
-// RESET SCREENS (iPHONE SAFE)
+// RESET
 // --------------------------
 
-function resetScreens() {
-  Object.values(screens).forEach(screen => {
-    screen.classList.remove('active');
+function resetScreens(){
+
+  Object.values(screens)
+  .forEach(screen=>{
+
+    screen.classList.remove(
+      'active'
+    );
+
   });
+
 }
+
 
 // --------------------------
 // NAVIGATE
 // --------------------------
 
-function navigate(target) {
+function navigate(target){
+
+  if(!screens[target]){
+
+    return;
+
+  }
+
   resetScreens();
-  screens[target].classList.add('active');
+
+  screens[target]
+  .classList
+  .add('active');
+
   current = target;
+
 }
+
 
 // --------------------------
 // KEYBOARD NAVIGATION
 // --------------------------
 
-document.addEventListener('keydown', (e) => {
-  if (document.activeElement.classList.contains('notepad')) return;
+document.addEventListener(
+'keydown',
+(e)=>{
 
-  switch (e.key) {
-    case 'ArrowUp':    navigate('north'); break;
-    case 'ArrowDown':  navigate('south'); break;
-    case 'ArrowLeft':  navigate('west');  break;
-    case 'ArrowRight': navigate('east');  break;
-    case 'Escape':
-    case 'Backspace':  navigate('center'); break;
+  // Don't navigate while typing
+
+  if(
+    document.activeElement &&
+    document.activeElement
+    .tagName === 'TEXTAREA'
+  ){
+
+    return;
+
   }
+
+  switch(e.key){
+
+    case 'ArrowUp':
+
+      navigate('north');
+
+      break;
+
+
+    case 'ArrowDown':
+
+      navigate('south');
+
+      break;
+
+
+    case 'ArrowLeft':
+
+      navigate('west');
+
+      break;
+
+
+    case 'ArrowRight':
+
+      navigate('east');
+
+      break;
+
+
+    case 'Escape':
+
+    case 'Backspace':
+
+      navigate('center');
+
+      break;
+
+  }
+
 });
 
+
 // --------------------------
-// TOUCH NAVIGATION WITH MINDFUL PAUSE
+// TOUCH NAVIGATION
 // --------------------------
 
 let startX = 0;
 let startY = 0;
-let holdTimer = null; // Holds the mindfulness pause anchor
 
-document.addEventListener('touchstart', (e) => {
-  if (e.target.classList.contains('notepad')) return;
+let holdTimer = null;
 
-  startX = e.changedTouches[0].screenX;
-  startY = e.changedTouches[0].screenY;
+let holdTriggered =
+false;
 
-  // Start the 500ms mindful hold anchor
-  holdTimer = setTimeout(() => {
-    navigate('center');
-  }, 500); 
-});
 
-document.addEventListener('touchmove', () => {
-  // If your finger moves to swipe, it's an action, not a pause. Cancel the hold.
-  clearTimeout(holdTimer);
-});
+// --------------------------
+// TOUCH START
+// --------------------------
 
-document.addEventListener('touchend', (e) => {
-  // If you lift your finger before the 500ms mark, cancel the hold.
-  clearTimeout(holdTimer);
+document.addEventListener(
+'touchstart',
+(e)=>{
 
-  if (e.target.classList.contains('notepad')) return;
+  if(
+    e.target.tagName ===
+    'TEXTAREA'
+  ){
 
-  const endX = e.changedTouches[0].screenX;
-  const endY = e.changedTouches[0].screenY;
+    return;
 
-  const dx = endX - startX;
-  const dy = endY - startY;
-
-  if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 70) navigate('east');
-    else if (dx < -70) navigate('west');
-  } else {
-    if (dy > 70) navigate('south');
-    else if (dy < -70) navigate('north');
   }
+
+  startX =
+  e.changedTouches[0]
+  .screenX;
+
+  startY =
+  e.changedTouches[0]
+  .screenY;
+
+  holdTriggered =
+  false;
+
+  // Hold 600ms
+  // return center
+
+  holdTimer =
+  setTimeout(()=>{
+
+    holdTriggered=true;
+
+    navigate(
+      'center'
+    );
+
+    if(
+      navigator.vibrate
+    ){
+
+      navigator.vibrate(
+        25
+      );
+
+    }
+
+  },600);
+
 });
 
+
 // --------------------------
-// INIT
+// TOUCH MOVE
 // --------------------------
 
-navigate('center');
+document.addEventListener(
+'touchmove',
+(e)=>{
+
+  const moveX =
+  e.changedTouches[0]
+  .screenX;
+
+  const moveY =
+  e.changedTouches[0]
+  .screenY;
+
+  const dx =
+  Math.abs(
+    moveX-startX
+  );
+
+  const dy =
+  Math.abs(
+    moveY-startY
+  );
+
+  // tiny movement ignored
+
+  if(
+    dx>12 ||
+    dy>12
+  ){
+
+    clearTimeout(
+      holdTimer
+    );
+
+  }
+
+});
+
+
+// --------------------------
+// TOUCH END
+// --------------------------
+
+document.addEventListener(
+'touchend',
+(e)=>{
+
+  clearTimeout(
+    holdTimer
+  );
+
+  if(
+    e.target.tagName===
+    'TEXTAREA'
+  ){
+
+    return;
+
+  }
+
+  if(
+    holdTriggered
+  ){
+
+    return;
+
+  }
+
+  const endX=
+  e.changedTouches[0]
+  .screenX;
+
+  const endY=
+  e.changedTouches[0]
+  .screenY;
+
+  const dx=
+  endX-startX;
+
+  const dy=
+  endY-startY;
+
+
+  // horizontal
+
+  if(
+    Math.abs(dx)>
+    Math.abs(dy)
+  ){
+
+    if(dx>70){
+
+      navigate(
+        'east'
+      );
+
+    }
+
+    else if(
+      dx<-70
+    ){
+
+      navigate(
+        'west'
+      );
+
+    }
+
+  }
+
+  // vertical
+
+  else{
+
+    if(dy>70){
+
+      navigate(
+        'south'
+      );
+
+    }
+
+    else if(
+      dy<-70
+    ){
+
+      navigate(
+        'north'
+      );
+
+    }
+
+  }
+
+});
+
+
+// --------------------------
+// INITIALIZE
+// --------------------------
+
+navigate(
+'center'
+);
