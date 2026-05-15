@@ -39,7 +39,8 @@ function navigate(target) {
 // --------------------------
 
 document.addEventListener('keydown', (e) => {
-  if (document.activeElement.tagName === 'TEXTAREA') return;
+  // ALIGNED: Stops navigation if you are typing inside your contenteditable notepad
+  if (document.activeElement.classList.contains('notepad')) return;
 
   switch (e.key) {
     case 'ArrowUp':
@@ -73,14 +74,16 @@ let startX = 0;
 let startY = 0;
 
 document.addEventListener('touchstart', (e) => {
-  if (e.target.tagName === 'TEXTAREA') return;
+  // ALIGNED: Ignores swipes if the touch starts inside your contenteditable notepad
+  if (e.target.classList.contains('notepad')) return;
 
   startX = e.changedTouches[0].screenX;
   startY = e.changedTouches[0].screenY;
 });
 
 document.addEventListener('touchend', (e) => {
-  if (e.target.tagName === 'TEXTAREA') return;
+  // ALIGNED: Ignores swipes if the touch ends inside your contenteditable notepad
+  if (e.target.classList.contains('notepad')) return;
 
   const endX = e.changedTouches[0].screenX;
   const endY = e.changedTouches[0].screenY;
