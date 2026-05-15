@@ -39,7 +39,6 @@ function navigate(target) {
 // --------------------------
 
 document.addEventListener('keydown', (e) => {
-  // ALIGNED: Stops navigation if you are typing inside your contenteditable notepad
   if (document.activeElement.classList.contains('notepad')) return;
 
   switch (e.key) {
@@ -72,17 +71,29 @@ document.addEventListener('keydown', (e) => {
 
 let startX = 0;
 let startY = 0;
+let lastTap = 0; // Tracks the timestamp of the last tap for double-tap detection
 
 document.addEventListener('touchstart', (e) => {
-  // ALIGNED: Ignores swipes if the touch starts inside your contenteditable notepad
   if (e.target.classList.contains('notepad')) return;
+
+  // --- DOUBLE TAP TO CENTER COMMAND ---
+  const currentTime = new Date().getTime();
+  const tapLength = currentTime - lastTap;
+  
+  // If two taps happen within 300 milliseconds, it's a double tap
+  if (tapLength < 300 && tapLength > 0) {
+    navigate('center');
+    e.preventDefault(); // Prevents zooming behavior on mobile devices
+    return;
+  }
+  lastTap = currentTime;
+  // ------------------------------------
 
   startX = e.changedTouches[0].screenX;
   startY = e.changedTouches[0].screenY;
 });
 
 document.addEventListener('touchend', (e) => {
-  // ALIGNED: Ignores swipes if the touch ends inside your contenteditable notepad
   if (e.target.classList.contains('notepad')) return;
 
   const endX = e.changedTouches[0].screenX;
