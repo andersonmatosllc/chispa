@@ -1,21 +1,24 @@
 // ===============================
-// CHISPA — Spatial Navigation
-// Swipe + Center Return Button
+// CHISPA CORE ENGINE
+// Navigation + Swipe + Storage
 // ===============================
 
 const screens = ["center", "north", "south", "east", "west"];
-
 let currentScreen = "center";
 
 // -------------------------------
-// Screen switching
+// STORAGE
+// -------------------------------
+const STORAGE_PREFIX = "chispa_note_";
+const saveTimers = {};
+
+// -------------------------------
+// SCREEN SWITCH
 // -------------------------------
 function showScreen(id) {
-  screens.forEach((screen) => {
-    const el = document.getElementById(screen);
-    if (!el) return;
-
-    el.classList.remove("active");
+  screens.forEach((s) => {
+    const el = document.getElementById(s);
+    if (el) el.classList.remove("active");
   });
 
   const target = document.getElementById(id);
@@ -25,61 +28,77 @@ function showScreen(id) {
 }
 
 // -------------------------------
-// Swipe detection
+// LOAD SAVED NOTES
 // -------------------------------
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
+function loadNotes() {
+  screens.forEach((screen) => {
+    const textarea = document.getElementById(`note-${screen}`);
+    if (!textarea) return;
 
-const threshold = 60;
+    const saved = localStorage.getItem(STORAGE_PREFIX + screen);
+    if (saved !== null) textarea.value = saved;
 
-// Prevent swipe interference with typing
-function isTypingTarget(e) {
+    attachAutoSave(textarea, screen);
+  });
+}
+
+// -------------------------------
+// AUTO SAVE (1.5s debounce)
+// -------------------------------
+function attachAutoSave(textarea, screen) {
+  textarea.addEventListener("input", () => {
+    clearTimeout(saveTimers[screen]);
+
+    saveTimers[screen] = setTimeout(() => {
+      localStorage.setItem(
+        STORAGE_PREFIX + screen,
+        textarea.value
+      );
+    }, 1500);
+  });
+}
+
+// -------------------------------
+// SWIPE SYSTEM
+// -------------------------------
+let startX = 0;
+let startY = 0;
+
+function isTyping(e) {
   return (
     e.target.tagName === "TEXTAREA" ||
-    e.target.tagName === "INPUT" ||
-    e.target.isContentEditable
+    e.target.tagName === "INPUT"
   );
 }
 
 document.addEventListener("touchstart", (e) => {
-  if (isTypingTarget(e)) return;
+  if (isTyping(e)) return;
 
-  touchStartX = e.changedTouches[0].screenX;
-  touchStartY = e.changedTouches[0].screenY;
+  startX = e.touches[0].screenX;
+  startY = e.touches[0].screenY;
 });
 
 document.addEventListener("touchend", (e) => {
-  if (isTypingTarget(e)) return;
+  if (isTyping(e)) return;
 
-  touchEndX = e.changedTouches[0].screenX;
-  touchEndY = e.changedTouches[0].screenY;
+  const dx = e.changedTouches[0].screenX - startX;
+  const dy = e.changedTouches[0].screenY - startY;
 
-  handleSwipe();
-});
-
-function handleSwipe() {
-  const dx = touchEndX - touchStartX;
-  const dy = touchEndY - touchStartY;
+  const threshold = 60;
 
   if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
 
   if (Math.abs(dx) > Math.abs(dy)) {
-    // Horizontal swipe
-    if (dx > 0) navigate("east");
-    else navigate("west");
+    navigate(dx > 0 ? "east" : "west");
   } else {
-    // Vertical swipe
-    if (dy > 0) navigate("south");
-    else navigate("north");
+    navigate(dy > 0 ? "south" : "north");
   }
-}
+});
 
 // -------------------------------
-// Navigation logic (spatial map)
+// SPATIAL NAVIGATION LOGIC
 // -------------------------------
-function navigate(direction) {
+function navigate(dir) {
   const map = {
     center: { north: "north", south: "south", east: "east", west: "west" },
     north: { south: "center" },
@@ -88,15 +107,12 @@ function navigate(direction) {
     west: { east: "center" }
   };
 
-  const next = map[currentScreen]?.[direction];
-
-  if (next) {
-    showScreen(next);
-  }
+  const next = map[currentScreen]?.[dir];
+  if (next) showScreen(next);
 }
 
 // -------------------------------
-// Center button (bottom rectangle)
+// CENTER BUTTON
 // -------------------------------
 function createCenterButton() {
   const btn = document.createElement("div");
@@ -109,19 +125,7 @@ function createCenterButton() {
   btn.style.height = "10px";
   btn.style.borderRadius = "6px";
   btn.style.background = "rgba(255,255,255,0.14)";
-  btn.style.backdropFilter = "blur(10px)";
-  btn.style.cursor = "pointer";
   btn.style.zIndex = "9999";
-
-  btn.style.transition = "all 0.2s ease";
-
-  btn.addEventListener("mouseenter", () => {
-    btn.style.background = "rgba(141,240,200,0.35)";
-  });
-
-  btn.addEventListener("mouseleave", () => {
-    btn.style.background = "rgba(255,255,255,0.14)";
-  });
 
   btn.addEventListener("click", () => {
     showScreen("center");
@@ -131,9 +135,10 @@ function createCenterButton() {
 }
 
 // -------------------------------
-// Init
+// INIT
 // -------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   showScreen("center");
+  loadNotes();
   createCenterButton();
 });
