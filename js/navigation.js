@@ -476,7 +476,7 @@ btn.style.position=
 "fixed";
 
 btn.style.bottom=
-"35px"; // raised
+"36px";
 
 btn.style.left=
 "50%";
@@ -496,7 +496,8 @@ btn.style.borderRadius=
 btn.style.background=
 COLORS.orange;
 
-btn.style.opacity=".85";
+btn.style.opacity=
+".9";
 
 btn.style.zIndex=
 "9999";
@@ -516,7 +517,6 @@ document.body
 .appendChild(btn);
 
 }
-
 
 // -------------------------------
 // INIT
