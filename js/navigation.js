@@ -96,66 +96,103 @@ function showScreen(id){
 
 function applyScreenUI(screen,id){
 
-  let existing=screen.querySelector(".chispa-header");
 
-  if(existing) existing.remove();
+  // remove previous generated UI
+  const old =
+  screen.querySelector(".chispa-header");
+
+  if(old) old.remove();
 
 
-  const wrapper=document.createElement("div");
+  // hide original title + saved
+  const originalTitle =
+  screen.querySelector("h1,.title,.screen-title");
 
-  wrapper.className="chispa-header";
+  const originalSaved =
+  screen.querySelector(".saved");
+
+  if(originalTitle){
+    originalTitle.style.display="none";
+  }
+
+  if(originalSaved){
+    originalSaved.style.display="none";
+  }
+
+
+  const wrapper=
+  document.createElement("div");
+
+  wrapper.className=
+  "chispa-header";
+
 
   wrapper.innerHTML=`
 
-    <div style="
-      position:absolute;
-      top:38px;
-      left:35px;
-      z-index:10;
-    ">
+  <div style="
+    position:absolute;
+
+    top:52px;
+    left:52px;
+
+    z-index:100;
+  ">
 
       <div style="
-        color:${COLORS.orange};
-        letter-spacing:8px;
-        font-size:18px;
-        font-weight:300;
+      color:${COLORS.orange};
+
+      letter-spacing:8px;
+
+      font-size:17px;
+
+      font-weight:300;
       ">
       ${screenMeta[id].title}
       </div>
 
+
       <div style="
-        margin-top:6px;
-        color:${COLORS.grey};
-        font-size:14px;
-        font-style:italic;
-        font-family:cursive;
-        opacity:.75;
+      margin-top:8px;
+
+      color:${COLORS.grey};
+
+      font-size:13px;
+
+      font-style:italic;
+
+      font-family:cursive;
+
+      opacity:.75;
       ">
       ^${screenMeta[id].subtitle}
       </div>
 
-    </div>
+  </div>
 
 
-    <div style="
-      position:absolute;
-      right:40px;
-      bottom:80px;
-      color:${COLORS.saved};
-      font-size:15px;
-      letter-spacing:5px;
-      opacity:.9;
-    ">
-      saved
-    </div>
+  <div style="
+  position:absolute;
 
-  `;
+  right:48px;
 
-  screen.appendChild(wrapper);
+  bottom:36px;
+
+  color:${COLORS.saved};
+
+  font-size:14px;
+
+  letter-spacing:5px;
+
+  opacity:.9;
+  ">
+  saved
+  </div>
+
+`;
+
+screen.appendChild(wrapper);
 
 }
-
-
 // -------------------------------
 // LOAD SAVED NOTES
 // -------------------------------
